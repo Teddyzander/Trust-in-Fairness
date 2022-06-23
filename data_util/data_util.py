@@ -79,3 +79,39 @@ def get_data_type(data):
             cat[i] = 'd'
 
     return dis_labels, cont_labels, cat
+
+
+def normalise(data):
+    """
+    Takes a data column and makes data->[0,1]
+    :param data: input data
+    :return: normalised data
+    """
+    data_max = np.max(data)
+    data_min = np.min(data)
+    if data_max == data_min:
+        data = 0
+    else:
+        data = (data - data_min) / (data_max - data_min)
+
+    return data
+
+
+def normalise_data(data, dis_labels, con_labels):
+    """
+    standardises data such that discrete data is numeric and continuous data has mean 0 and variance 1
+    :param data: original dataframe
+    :param dis_labels: list of discrete labels
+    :param con_labels: list of continuous labels
+    :return: standardises data set
+    """
+
+    # standardise discrete labels such that the feature is numeric
+    for label in dis_labels:
+        data[label] = data[label].astype('category').cat.codes
+
+    # normalise the continuous data
+    for label in con_labels:
+        data[label] = normalise(data[label])
+
+    return data
