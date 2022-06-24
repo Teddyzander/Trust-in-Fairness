@@ -1,7 +1,9 @@
 import data_util.data_util as data_util
+import numpy as np
 from sklearn.linear_model import LogisticRegression
 from fairlearn.reductions import DemographicParity
 from fairlearn.metrics import demographic_parity_difference
+from fairlearn.postprocessing import ThresholdOptimizer
 
 if __name__ == '__main__':
     # get the causality model data
@@ -27,11 +29,27 @@ if __name__ == '__main__':
     model = LogisticRegression(max_iter=10000)
     model.fit(x_tr, y_tr)
 
-    print(model.score(x_te, y_te))
+    # fit threshold optimiser to model
+    thresh_model = ThresholdOptimizer(
+            estimator=model,
+            constraints='demographic_parity',
+            objective='accuracy_score',
+            prefit=True,
+            grid_size=100000)
+    thresh_model.fit(x_tr, y_tr, sensitive_features=sens_tr)
 
+    # make predictions on testing data set
     baseline_output = model.predict(x_te)
-    base_fairness = demographic_parity_difference(y_te, baseline_output, sensitive_features=sens_te)
+    thresh_output = thresh_model.predict(x_te, sensitive_features=sens_te)
 
-    print(base_fairness)
+    # measure the fairness of each model
+    base_fairness = demographic_parity_difference(y_te, baseline_output, sensitive_features=sens_te)
+    thresh_fairness = demographic_parity_difference(y_te, thresh_output, sensitive_features=sens_te)
+
+    print('Base score: {}'.format(model.score(x_te, y_te)))
+    print('Threshold score: {}'.format(1 - np.sum((np.abs(thresh_output - y_te))) / len(y_te)))
+
+    print('Base fairness: {}'.format(base_fairness))
+    print('Threshold fairness: {}'.format(thresh_fairness))
 
     print('stop')

@@ -3,9 +3,12 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 
-def gen_data(size=1000000):
+def gen_data(size=1000000, t=0):
     """
     Generate the paper data set
+    :param size: the size of the generated data set
+    :param t: t is a value between [0,1], and is a linear transformation that represents the bias in the data. t=0 is
+    maximum bias, and t=1 is no bias.
     :return: the data set
     """
 
@@ -25,6 +28,8 @@ def gen_data(size=1000000):
     for row in range(0, size):
         # allocate target
         a = data[row, 3]
+        if a == -1:
+            a = t * (-2 * a) - 1
         y = [-1, 1]
         target[row] = np.random.choice(y, p=[1/(1+np.exp(-2*a*y[0])), 1/(1+np.exp(-2*a*y[1]))])
 
@@ -35,7 +40,7 @@ def gen_data(size=1000000):
 
         # allocate feature 3
         rand_1 = np.random.normal(a + 1, 1)
-        rand_2 = np.random.normal(1 - 1, 1)
+        rand_2 = np.random.normal(a - 1, 1)
         data[row, 2] = (1/(1+np.exp(-2*a))) * rand_1 + (1/(1+np.exp(2*a))) * rand_2
 
     # convert to a data frame
