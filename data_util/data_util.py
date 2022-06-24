@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 
 def gen_data(size=1000000):
@@ -115,3 +116,20 @@ def normalise_data(data, dis_labels, con_labels):
         data[label] = normalise(data[label])
 
     return data
+
+
+def split(data, target, sensitive, ratio=0.7, seed=876):
+    """
+    Splits the data into training data and testing data
+    :param data: input data
+    :param target: target data
+    :param sensitive: sensitive data
+    :param ratio: ratio of data split (eg 0.7 is 70% training, 30% testing)
+    :param seed: set pseudo-random seed so experiments can be repeated with same test/train split
+    :param sens_name: name of sensitive label
+    :return: x_tr is the training input, y_tr is the testing output, sens_tr is the training sensitive data input,
+    x_te is the testing input, y_te is the testing output, sens_te is the testing sensitive data input
+    """
+
+    x_tr, x_te, y_tr, y_te, sens_tr, sens_te = train_test_split(data, target, sensitive, train_size=ratio, random_state=seed)
+    return x_tr, y_tr, sens_tr, x_te, y_te, sens_te
